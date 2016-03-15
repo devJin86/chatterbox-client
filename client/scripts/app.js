@@ -1,39 +1,43 @@
 // YOUR CODE HERE:
-
+var dataResults;
+var roomList = {};
+var friends = [];
 
 var app = {
-    init: function(){//should i be using load?  how do i know how to populate these fields?
+    init: function() {//should i be using load?  how do i know how to populate these fields?
     var $login = ("<input type='text' id='login'/>");
-	var $chatField = ("<input type='text' id='chatField'/>");
-	var $loginButton = ("<button class='loginButton'>Login</button>");
-	var $submitButton = ("<button class='submitButton'>Submit</button>");
-	var $clearButton = ("<button class='clearButton'>Clear All</button>");
-	var $refreshButton = ("<button class='refreshButton'>Refresh</button>");
-	var $roomButton = ('<span class="dropdown"><a class="roomMenu" >Room Menu</a></span>');
-	var $roomList = ('<span class="submenu"><ul class="root"></ul></span>')
-	// var roomIndex = room.length -1 
-	// while(roomIndex >= 0){
-		// var $roomItem = ('<li ><a href="#Dashboard" >data.room[roomIndex]</a></li>)'
-		// $('.submenu').append($roomItem);
-	// 	roomIndex--;
-	// }
-	$('.roomMenu').append($roomList);
-	var $chatList = ("<ul id='chatList'>messages</ul>");
-//$chatList.text("newmessages");
-	$('#chats').append($login);
-	$('#chats').append($loginButton);
-	$('#chats').append($roomButton);
-	$('#chats').append($chatField);
-	$('#chats').append($submitButton);
-	$('#chats').append($clearButton);
-	$('#chats').append($refreshButton);
-	$('#chats').append($chatList);
+	  var $chatField = ("<input type='text' id='chatField'/>");
+    var $newRoom = ("<input type='text' class='newRoom'/>");
+    var $roomCreate = ("<button class='roomCreate'>Create Room</button>");
+	  var $loginButton = ("<button class='loginButton'>Login</button>");
+	  var $submitButton = ("<button class='submitButton'>Submit</button>");
+	  var $clearButton = ("<button class='clearButton'>Clear All</button>");
+	  var $refreshButton = ("<button class='refreshButton'>Refresh</button>");
+	  var $roomMenu = ('<select class="roomMenu">Room Menu</select>');
+  	// var roomIndex = room.length -1 
+  	// while(roomIndex >= 0){
+  		// var $roomItem = ('<li ><a href="#Dashboard" >data.room[roomIndex]</a></li>)'
+  		// $('.submenu').append($roomItem);
+  	// 	roomIndex--;
+  	// }
+  	var $chatList = ("<ul id='chatList'>messages</ul>");
+  //$chatList.text("newmessages");
+  	$('#chats').append($login);
+  	$('#chats').append($loginButton);
+    $('#chats').append($newRoom);
+    $('#chats').append($roomCreate);
+  	$('#chats').append($roomMenu);
+  	$('#chats').append($chatField);
+  	$('#chats').append($submitButton);
+  	$('#chats').append($clearButton);
+  	$('#chats').append($refreshButton);
+  	$('#chats').append($chatList);
 
 
 	$('h1').append("<h6>Welcome back</h6>");
 	this.fetch();  
     },
-    send: function(message){
+    send: function(message) {
 
 		$.ajax({
   			// This is the url you should use to communicate with the parse API server.
@@ -51,7 +55,7 @@ var app = {
 		});
 		this.addMessage(message);
     },
-    fetch: function(){	
+    fetch: function() {	
 		 	$.ajax({
   			// This is the url you should use to communicate with the parse API server.
   			url: 'https://api.parse.com/1/classes/messages',
@@ -59,9 +63,17 @@ var app = {
   			data: "json",
   			contentType: 'application/json',
   			success: function (data) {
-    			_.each(data.tweet, function(value){
-    			app.addMessage(tweet);
-  			});
+          dataResults = data;
+    			_.each(data.results, function(value) {
+    			  app.addMessage(value);
+  			  });
+          data.results.forEach(function(val, idx) {
+            roomList[val.roomname] = val.roomname; 
+          });
+          for (var prop in roomList) {
+            var $roomName = ('<option>' + prop + '</option>');
+            $('.roomMenu').append($roomName); 
+          }
     		},
   			error: function (data) {
     		// See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
@@ -79,18 +91,31 @@ var app = {
     	var $newTweet = $('<li></li>');
     	var $tweeter = $('<button>tweeter</button>');
         var $tweeted = $('<span>tweeted</span>');
-        $tweeter.addClass("btn-username");
+        $tweeter.addClass('btn-username');
         $tweeter.data("user", speaker);
         $newTweet.append($tweeter);
         $newTweet.append($tweeted);
         $tweeter.data("user", speaker);
         $tweeter.attr("href", '#');
         $tweeter.text("@" + speaker);
-        $tweeted.text(said);
+        if(_.indexOf(friends, speaker) >= 0){
+            $tweeted.text('<bold>'+said+'<bold>');
+        } else {
+          $tweeted.text(said);
+        }
         $newTweet.appendTo($ul);
     },
     addRoom: function(text){
-        
+      roomList[$('.newRoom').val()] = $('.newRoom').val();
+      var $newRoomName = $('.newRoom').val();
+      $('select').val($newRoomName);
+      var roomMessages = _.filter(dataResults.results, function(val) {
+    return val.roomname === $('select').val();
+  });
+  $('ul').empty();
+  roomMessages.forEach(function(val) {
+    app.addMessage(val);
+  });
     },
 };
 //Personalizes the page and provides the input field
@@ -103,7 +128,7 @@ app.init();
 //?? how does this differ from addMessage?
 //?? should init  call fetch?
 $('.submitButton').on('click', function(){
-	console.log("clicked");
+
 	var $username = $('#login').val();
 	var $messageText = $("#chatField").val(); 
 	var $message = {
@@ -117,7 +142,22 @@ $('.submitButton').on('click', function(){
 
 $('.clearButton').on('click', app.clearMessages);
 $('.loginButton').on('click', app.clearMessages);
-$('.refreshButton').on('click', app.fetch);
+$('.roomCreate').on('click', app.addRoom);
+$('.refreshButton').on('click', function() {
+  var roomMessages = _.filter(dataResults.results, function(val) {
+    return val.roomname === $('select').val();
+  });
+  $('ul').empty();
+  roomMessages.forEach(function(val) {
+    app.addMessage(val);
+  });
+});
+
+$('li').on('click', function() {
+  friends.push(this.data);
+  console.log('this');
+});
+
 
 //Display messages retrieved from the parse server. (Use proper escaping on any user input.)
 
