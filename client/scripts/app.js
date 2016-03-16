@@ -1,10 +1,12 @@
 // YOUR CODE HERE:
 var dataResults;
 var roomList = {};
-var friends = [];
+var friends = {};
+var currentRoom;
 
 var app = {
     init: function() {//should i be using load?  how do i know how to populate these fields?
+      console.log("init");
     var $login = ("<input type='text' id='login'/>");
 	  var $chatField = ("<input type='text' id='chatField'/>");
     var $newRoom = ("<input type='text' class='newRoom'/>");
@@ -20,7 +22,7 @@ var app = {
   		// $('.submenu').append($roomItem);
   	// 	roomIndex--;
   	// }
-  	var $chatList = ("<ul id='chatList'>messages</ul>");
+  	var $chatList = ("<ul class = 'container' id='chatList'>messages</ul>");
   //$chatList.text("newmessages");
   	$('#chats').append($login);
   	$('#chats').append($loginButton);
@@ -34,7 +36,7 @@ var app = {
   	$('#chats').append($chatList);
 
 
-	$('h1').append("<h6>Welcome back</h6>");
+	$('h1').append("<h2>Welcome back</h2>");
 	this.fetch();  
     },
     send: function(message) {
@@ -56,6 +58,7 @@ var app = {
 		this.addMessage(message);
     },
     fetch: function() {	
+      console.log("fetching data");
 		 	$.ajax({
   			// This is the url you should use to communicate with the parse API server.
   			url: 'https://api.parse.com/1/classes/messages',
@@ -74,6 +77,7 @@ var app = {
             var $roomName = ('<option>' + prop + '</option>');
             $('.roomMenu').append($roomName); 
           }
+          
     		},
   			error: function (data) {
     		// See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
@@ -81,34 +85,38 @@ var app = {
   			}
 		});  
     },
-    clearMessages: function(){
+    clearMessages: function() {
     	$('ul').empty();
     },
-    addMessage: function(tweet){
+    addMessage: function(tweet) {
+      console.log('adding messages');
     	var $ul = $('ul');
     	var said = (tweet.text);
     	var speaker = (tweet.username);
     	var $newTweet = $('<li></li>');
-    	var $tweeter = $('<button>tweeter</button>');
-        var $tweeted = $('<span>tweeted</span>');
-        $tweeter.addClass('btn-username');
-        $tweeter.data("user", speaker);
+    	var $tweeter = $('<button></button>');
+      var $tweeted = $('<span></span>');
+        $tweeter.addClass('btn username');
+        $tweeter.data('user', speaker);
+        $tweeter.text(speaker);
         $newTweet.append($tweeter);
         $newTweet.append($tweeted);
-        $tweeter.data("user", speaker);
-        $tweeter.attr("href", '#');
-        $tweeter.text("@" + speaker);
-        if(_.indexOf(friends, speaker) >= 0){
-            $tweeted.text('<bold>'+said+'<bold>');
+        $tweeter.attr('href', '#');
+        if(_.contains(friends, speaker)) { //Object.keys(friends) then could used indexOf
+            console.log("contains is working");
+            $tweeted.text(said);
+            $tweeted.addClass('friend');
         } else {
           $tweeted.text(said);
         }
         $newTweet.appendTo($ul);
     },
-    addRoom: function(text){
-      roomList[$('.newRoom').val()] = $('.newRoom').val();
+    addRoom: function(text) {
+      console.log('adding room');
       var $newRoomName = $('.newRoom').val();
-      $('select').val($newRoomName);
+      roomList[$newRoomName] = $newRoomName;
+      var $newRoomOption = $('<option/>').val($newRoomName).text($newRoomName);
+      $('select').append($newRoomOption);
       var roomMessages = _.filter(dataResults.results, function(val) {
     return val.roomname === $('select').val();
   });
@@ -120,14 +128,14 @@ var app = {
 };
 //Personalizes the page and provides the input field
 
-app.init();
+
 //fetches and loads the data from the server
 
 
 //creates messages based on user input and sends to server
 //?? how does this differ from addMessage?
 //?? should init  call fetch?
-$('.submitButton').on('click', function(){
+$('.submitButton').on('click', function() {
 
 	var $username = $('#login').val();
 	var $messageText = $("#chatField").val(); 
@@ -142,7 +150,7 @@ $('.submitButton').on('click', function(){
 
 $('.clearButton').on('click', app.clearMessages);
 $('.loginButton').on('click', app.clearMessages);
-$('.roomCreate').on('click', app.addRoom);
+$('#chats').on('click', '.roomCreate', app.addRoom);
 $('.refreshButton').on('click', function() {
   var roomMessages = _.filter(dataResults.results, function(val) {
     return val.roomname === $('select').val();
@@ -153,9 +161,12 @@ $('.refreshButton').on('click', function() {
   });
 });
 
-$('li').on('click', function() {
-  friends.push(this.data);
-  console.log('this');
+$('#chats').on('click', '.btn username', function() {
+  var friendName = $(this).data('user');
+  friends[friendName] = friendName;
+  console.log(friendName);
+  app.clearMessages();
+  app.fetch();
 });
 
 

@@ -13,12 +13,25 @@
     <script src="env/config.js"></script>
     
   </head>
-  <body>
-    <div id="main">
-      <h1>chatterbox</h1>
-      <!-- Your HTML goes here! -->
-    </div>
-    <div id="chats"></div>
+  <body class="row-alt">
+    <header class="primary-header container group">
+      <section class="container">
+        <div id="main">
+          <h1 class='logo'>chat<br>ter:)<br>box</h1>
+        </div>
+      </section>
+    </header>
+          <!-- Your HTML goes here! -->
+    <section class = "row-alt">
+      <div id= "chats" class = "container">
+      </div>
+    </section>
+        <footer class="primary-footer container group">
+      <small class = "container">&copy; chatterbox</small>
+    </footer>
   <script src="scripts/app.js"></script>
+  <script>
+    app.init();
+  </script>
   </body>
 </html>
